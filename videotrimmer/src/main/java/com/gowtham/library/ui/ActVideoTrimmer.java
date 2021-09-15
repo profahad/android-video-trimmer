@@ -32,7 +32,9 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.akexorcist.localizationactivity.ui.LocalizationActivity;
-import com.arthenica.mobileffmpeg.FFmpeg;
+import com.arthenica.ffmpegkit.FFmpegKit;
+import com.arthenica.ffmpegkit.FFmpegSession;
+import com.arthenica.ffmpegkit.ReturnCode;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
@@ -595,8 +597,8 @@ public class ActVideoTrimmer extends LocalizationActivity {
     private void execFFmpegBinary(final String[] command, boolean retry) {
         try {
             new Thread(() -> {
-                int result = FFmpeg.execute(command);
-                if (result == 0) {
+                FFmpegSession result = FFmpegKit.execute(command);
+                if (ReturnCode.isSuccess(result.getReturnCode())) {
                     dialog.dismiss();
                     if (showFileLocationAlert)
                         showLocationAlert();
@@ -606,7 +608,7 @@ public class ActVideoTrimmer extends LocalizationActivity {
                         setResult(RESULT_OK, intent);
                         finish();
                     }
-                } else if (result == 255) {
+                } else if (ReturnCode.isCancel(result.getReturnCode())) {
                     LogMessage.v("Command cancelled");
                     if (dialog.isShowing())
                         dialog.dismiss();
@@ -680,7 +682,7 @@ public class ActVideoTrimmer extends LocalizationActivity {
             dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             txtCancel.setOnClickListener(v -> {
                 dialog.dismiss();
-                FFmpeg.cancel();
+                FFmpegKit.cancel();
             });
             dialog.show();
         } catch (Exception e) {
