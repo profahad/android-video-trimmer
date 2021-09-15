@@ -40,6 +40,7 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
 import com.crystal.crystalrangeseekbar.widgets.CrystalRangeSeekbar;
 import com.crystal.crystalrangeseekbar.widgets.CrystalSeekbar;
+import com.faaadi.module.faalert.builders.FaAlertConfirmation;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.Player;
@@ -70,6 +71,9 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 
+import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
+
 
 public class ActVideoTrimmer extends LocalizationActivity {
 
@@ -86,6 +90,8 @@ public class ActVideoTrimmer extends LocalizationActivity {
     private Dialog dialog;
 
     private Uri uri;
+
+    private String inputSource;
 
     private TextView txtStartDuration, txtEndDuration;
 
@@ -144,9 +150,10 @@ public class ActVideoTrimmer extends LocalizationActivity {
         bundle = getIntent().getExtras();
         Gson gson = new Gson();
         String videoOption = bundle.getString(TrimVideo.TRIM_VIDEO_OPTION);
+        inputSource = bundle.getString(TrimVideo.INPUT_MEDIA_SOURCE);
         trimVideoOptions = gson.fromJson(videoOption, TrimVideoOptions.class);
         setUpToolBar(getSupportActionBar(), trimVideoOptions.title);
-        toolbar.setNavigationOnClickListener(v -> finish());
+        toolbar.setNavigationOnClickListener(v -> restrictUser());
         progressView = new CustomProgressView(this);
     }
 
@@ -216,8 +223,8 @@ public class ActVideoTrimmer extends LocalizationActivity {
             Runnable fileUriRunnable = () -> {
                 uri = Uri.parse(bundle.getString(TrimVideo.TRIM_VIDEO_URI));
 //              String path = FileUtils.getPath(ActVideoTrimmer.this, uri);
-                String path=FileUtils.getRealPath(ActVideoTrimmer.this,uri);
-                uri = Uri.parse(path);
+//                String path = FileUtils.getRealPath(ActVideoTrimmer.this, uri);
+//                uri = Uri.parse(path);
                 runOnUiThread(() -> {
                     LogMessage.v("VideoUri:: " + uri);
                     progressBar.setVisibility(View.GONE);
@@ -339,7 +346,7 @@ public class ActVideoTrimmer extends LocalizationActivity {
                 long interval = (diff * sec) * 1000000;
                 RequestOptions options = new RequestOptions().frame(interval);
                 Glide.with(this)
-                        .load(bundle.getString(TrimVideo.TRIM_VIDEO_URI))
+                        .load(new File(bundle.getString(TrimVideo.TRIM_VIDEO_URI)))
                         .apply(options)
                         .transition(DrawableTransitionOptions.withCrossFade(300))
                         .into(img);
@@ -605,6 +612,7 @@ public class ActVideoTrimmer extends LocalizationActivity {
                     else {
                         Intent intent = new Intent();
                         intent.putExtra(TrimVideo.TRIMMED_VIDEO_PATH, outputPath);
+                        intent.putExtra(TrimVideo.INPUT_MEDIA_SOURCE, inputSource);
                         setResult(RESULT_OK, intent);
                         finish();
                     }
@@ -733,4 +741,26 @@ public class ActVideoTrimmer extends LocalizationActivity {
         seekHandler.removeCallbacks(updateSeekbar);
     }
 
+    @Override
+    public void onBackPressed() {
+
+    }
+
+    private void restrictUser() {
+        FaAlertConfirmation.Companion.with(getSupportFragmentManager())
+                .title("Alert")
+                .message("Are you sure, you want to go back ?")
+                .titleCancelButton("Cancel")
+                .titleConfirmButton("Yes")
+                .onConfirmClickListener(() -> {
+                    if (!inputSource.equals("Files")) {
+                        File file = new File(bundle.getString(TrimVideo.TRIM_VIDEO_URI));
+                        if (file.exists()) {
+                            file.delete();
+                        }
+                    }
+                    finish();
+                    return Unit.INSTANCE;
+                }).show();
+    }
 }

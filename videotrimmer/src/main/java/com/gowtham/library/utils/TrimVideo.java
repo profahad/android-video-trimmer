@@ -15,14 +15,24 @@ import com.gowtham.library.ui.ActVideoTrimmer;
 public class TrimVideo {
 
     public static final String TRIM_VIDEO_OPTION = "trim_video_option",
-            TRIM_VIDEO_URI = "trim_video_uri",TRIMMED_VIDEO_PATH="trimmed_video_path";
+            INPUT_MEDIA_SOURCE = "input_source",
+            TRIM_VIDEO_URI = "trim_video_uri",
+            TRIMMED_VIDEO_PATH = "trimmed_video_path";
 
     public static ActivityBuilder activity(String uri) {
         return new ActivityBuilder(uri);
     }
 
-    public static String getTrimmedVideoPath(Intent intent){
+    public static ActivityBuilder activity(String uri, String mode) {
+        return new ActivityBuilder(uri, mode);
+    }
+
+    public static String getTrimmedVideoPath(Intent intent) {
         return intent.getStringExtra(TRIMMED_VIDEO_PATH);
+    }
+
+    public static String getInputSource(Intent intent) {
+        return intent.getStringExtra(INPUT_MEDIA_SOURCE);
     }
 
     public static final class ActivityBuilder {
@@ -30,12 +40,23 @@ public class TrimVideo {
         @Nullable
         private final String videoUri;
 
+        @Nullable
+        private final String inputMode;
+
         private final TrimVideoOptions options;
 
         public ActivityBuilder(@Nullable String videoUri) {
             this.videoUri = videoUri;
+            this.inputMode = "Files";
             options = new TrimVideoOptions();
-            options.trimType=TrimType.DEFAULT;
+            options.trimType = TrimType.DEFAULT;
+        }
+
+        public ActivityBuilder(@Nullable String videoUri, @Nullable String inputMode) {
+            this.videoUri = videoUri;
+            this.inputMode = inputMode;
+            options = new TrimVideoOptions();
+            options.trimType = TrimType.DEFAULT;
         }
 
         public ActivityBuilder setTrimType(final TrimType trimType) {
@@ -99,7 +120,7 @@ public class TrimVideo {
             launcher.launch(getIntent(activity));
         }
 
-        public void start(Fragment fragment,ActivityResultLauncher<Intent> launcher) {
+        public void start(Fragment fragment, ActivityResultLauncher<Intent> launcher) {
             validate();
             launcher.launch(getIntent(fragment.getActivity()));
         }
@@ -115,10 +136,10 @@ public class TrimVideo {
                 throw new IllegalArgumentException("Cannot set min duration to a number < 1");
             if (options.fixedDuration < 0)
                 throw new IllegalArgumentException("Cannot set fixed duration to a number < 1");
-            if (options.trimType==TrimType.MIN_MAX_DURATION && options.minToMax==null)
+            if (options.trimType == TrimType.MIN_MAX_DURATION && options.minToMax == null)
                 throw new IllegalArgumentException("Used trim type is TrimType.MIN_MAX_DURATION." +
                         "Give the min and max duration");
-            if (options.minToMax != null){
+            if (options.minToMax != null) {
                 if ((options.minToMax[0] < 0 || options.minToMax[1] < 0))
                     throw new IllegalArgumentException("Cannot set min to max duration to a number < 1");
                 if ((options.minToMax[0] > options.minToMax[1]))
@@ -129,10 +150,11 @@ public class TrimVideo {
         }
 
         private Intent getIntent(Activity activity) {
-            Intent intent = new Intent(activity,  ActVideoTrimmer.class);
+            Intent intent = new Intent(activity, ActVideoTrimmer.class);
             Gson gson = new Gson();
-            Bundle bundle=new Bundle();
+            Bundle bundle = new Bundle();
             bundle.putString(TRIM_VIDEO_URI, videoUri);
+            bundle.putString(INPUT_MEDIA_SOURCE, inputMode);
             bundle.putString(TRIM_VIDEO_OPTION, gson.toJson(options));
             intent.putExtras(bundle);
             return intent;

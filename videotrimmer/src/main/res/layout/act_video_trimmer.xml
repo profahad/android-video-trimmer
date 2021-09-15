@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    style="@style/StyleRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:background="#303030"
+    android:clickable="true"
     tools:ignore="ContentDescription">
 
     <LinearLayout style="@style/FView">
@@ -35,8 +37,8 @@
 
             <ProgressBar
                 android:id="@+id/progress_circular"
-                android:layout_centerInParent="true"
-                style="@style/WView" />
+                style="@style/WView"
+                android:layout_centerInParent="true" />
         </RelativeLayout>
 
     </LinearLayout>
@@ -64,4 +66,4 @@
         android:textSize="14sp"
         android:visibility="gone" />
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</FrameLayout>
